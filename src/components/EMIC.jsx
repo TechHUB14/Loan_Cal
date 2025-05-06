@@ -77,11 +77,18 @@ export const EMIC = () => {
 
 
     useEffect(() => {
-        if (emi && exchangeRates[currency]) {
-            const convertedAmount = emi * exchangeRates[currency];
-            setConvertedEMI(convertedAmount.toFixed(2));
+        if (!emi) return;
+    
+        if (currency === 'INR') {
+            setConvertedEMI(emi.toFixed(2)); // No conversion needed
+        } else if (exchangeRates[currency] && exchangeRates['INR']) {
+            const rate = exchangeRates[currency]; // USD to selected currency
+            const inUSD = emi / exchangeRates['INR']; // INR to USD
+            const converted = inUSD * rate; // USD to target currency
+            setConvertedEMI(converted.toFixed(2));
         }
     }, [emi, currency, exchangeRates]);
+    
 
     useEffect(() => {
         const savedTheme = localStorage.getItem('theme');

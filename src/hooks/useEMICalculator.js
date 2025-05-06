@@ -1,14 +1,13 @@
-
 import { useState } from 'react';
 
 export const useEMICalculator = () => {
   const [emi, setEmi] = useState(null);
   const [schedule, setSchedule] = useState([]);
 
-  const calculateEMI = (principal, rate, term) => {
+  const calculateEMI = (principal, annualRate, termInMonths) => {
     const P = parseFloat(principal);
-    const R = parseFloat(rate) / 12 / 100;
-    const N = parseInt(term);
+    const R = parseFloat(annualRate) / 12 / 100; // Monthly rate in decimal
+    const N = parseInt(termInMonths);
 
     if (!P || !R || !N) {
       setEmi(null);
@@ -16,26 +15,32 @@ export const useEMICalculator = () => {
       return;
     }
 
-    const emiVal = (P * R * Math.pow(1 + R, N)) / (Math.pow(1 + R, N) - 1);
-    setEmi(emiVal.toFixed(2));
+    // EMI formula
+    const emiValue = (P * R * Math.pow(1 + R, N)) / (Math.pow(1 + R, N) - 1);
 
-    const amortization = [];
+    // Fix EMI precision and update state
+    const roundedEMI = parseFloat(emiValue.toFixed(2));
+    setEmi(roundedEMI);
+
+    // Build amortization schedule
     let balance = P;
-    for (let i = 1; i <= N; i++) {
-      const interest = balance * R;
-      const principalPayment = emiVal - interest;
-      balance -= principalPayment;
+    const newSchedule = [];
 
-      amortization.push({
-        month: i,
-        emi: emiVal.toFixed(2),
-        principal: principalPayment.toFixed(2),
+    for (let month = 1; month <= N; month++) {
+      const interest = balance * R;
+      const principalPart = roundedEMI - interest;
+      balance -= principalPart;
+
+      newSchedule.push({
+        month,
+        emi: roundedEMI.toFixed(2),
+        principal: principalPart.toFixed(2),
         interest: interest.toFixed(2),
         balance: balance > 0 ? balance.toFixed(2) : '0.00',
       });
     }
 
-    setSchedule(amortization);
+    setSchedule(newSchedule);
   };
 
   return { emi, schedule, calculateEMI };
